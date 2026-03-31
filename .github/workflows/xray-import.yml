@@ -68,7 +68,7 @@ jobs:
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${{ secrets.JIRA_PROJECT_KEY }}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${{ github.event.inputs.test_environment }}&revision=WAVE_6" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
-            -F "file=@results/ToscaCIResults_fixed.xml")
+            -F "file=@results/ToscaCIResults_fixed.xml;type=text/xml")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
