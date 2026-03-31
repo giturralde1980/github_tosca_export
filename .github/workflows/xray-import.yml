@@ -1,0 +1,47 @@
+name: Import Tosca Results to Xray
+
+on:
+  workflow_dispatch:
+    inputs:
+      results_file:
+        description: 'Path to ToscaCIResults.xml'
+        required: true
+        default: 'results/ToscaCIResults.xml'
+      test_exec_summary:
+        description: 'Test Execution summary in Jira'
+        required: false
+        default: 'WAVE_6 - Opella Italy O2C Regression'
+      test_environment:
+        description: 'Test environment label'
+        required: false
+        default: 'SAP_FIORI_ITALY'
+
+jobs:
+  import-to-xray:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Xray Cloud
+        id: auth
+        run: |
+          TOKEN=$(curl -s -X POST \
+            "https://xray.cloud.getxray.app/api/v2/authenticate" \
+            -H "Content-Type: application/json" \
+            -d "{\"client_id\":\"${{ secrets.XRAY_CLIENT_ID }}\",\"client_secret\":\"${{ secrets.XRAY_CLIENT_SECRET }}\"}" \
+            | tr -d '"')
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          echo "Authentication successful"
+
+      - name: Import JUnit XML to Xray Cloud
+        run: |
+          SUMMARY="${{ github.event.inputs.test_exec_summary }}"
+          ENCODED_SUMMARY=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SUMMARY'))")
+
+          curl -X POST \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${{ secrets.JIRA_PROJECT_KEY }}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${{ github.event.inputs.test_environment }}&revision=WAVE_6" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            -H "Content-Type: multipart/form-data" \
+            -F "file=@${{ github.event.inputs.results_file }}"
