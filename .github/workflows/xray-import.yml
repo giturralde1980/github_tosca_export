@@ -45,6 +45,24 @@ jobs:
           echo "Authentication successful"
           echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
+      - name: Fix XML - add classname attribute
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET
+
+          tree = ET.parse('${{ github.event.inputs.results_file }}')
+          root = tree.getroot()
+
+          for testsuite in root.findall('testsuite'):
+              suite_name = testsuite.get('name', 'UNKNOWN')
+              for testcase in testsuite.findall('testcase'):
+                  if not testcase.get('classname'):
+                      testcase.set('classname', suite_name)
+
+          tree.write('results/ToscaCIResults_fixed.xml', encoding='utf-8', xml_declaration=True)
+          print("XML fixed - classname attributes added")
+          EOF
+
       - name: Import JUnit XML to Xray Cloud
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
@@ -59,7 +77,7 @@ jobs:
             "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${{ secrets.JIRA_PROJECT_KEY }}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${{ github.event.inputs.test_environment }}&revision=WAVE_6" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
             -H "Content-Type: multipart/form-data" \
-            -F "file=@${{ github.event.inputs.results_file }}")
+            -F "file=@results/ToscaCIResults_fixed.xml")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
