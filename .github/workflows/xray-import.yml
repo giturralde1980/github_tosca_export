@@ -51,9 +51,10 @@ jobs:
             "${{ github.event.inputs.results_file }}" \
             results/ToscaCIResults_fixed.xml
 
-          echo "Fixed XML first 3 lines:"
-          head -3 results/ToscaCIResults_fixed.xml
           echo "File size: $(wc -c < results/ToscaCIResults_fixed.xml) bytes"
+          echo "=== FULL CONTENT OF FIXED XML ==="
+          cat results/ToscaCIResults_fixed.xml
+          echo "=== END OF FIXED XML ==="
 
       - name: Import JUnit XML to Xray Cloud
         run: |
