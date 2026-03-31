@@ -75,7 +75,7 @@ jobs:
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://xray.cloud.getxray.app/api/v2/import/execution/junit/multipart" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
-            -F "file=@results/ToscaCIResults_fixed.xml;type=text/xml" \
+            -F "result=@results/ToscaCIResults_fixed.xml;type=text/xml" \
             -F "info=$INFO_JSON;type=application/json")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
