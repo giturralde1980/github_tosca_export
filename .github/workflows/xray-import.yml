@@ -59,17 +59,24 @@ jobs:
       - name: Import JUnit XML to Xray Cloud
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
-          ENCODED_SUMMARY=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$SUMMARY")
+          ENVIRONMENT="${{ github.event.inputs.test_environment }}"
+          PROJECT="${{ secrets.JIRA_PROJECT_KEY }}"
 
           echo "Importing file: results/ToscaCIResults_fixed.xml"
-          echo "Project: ${{ secrets.JIRA_PROJECT_KEY }}"
+          echo "Project: $PROJECT"
           echo "Summary: $SUMMARY"
-          echo "Environment: ${{ github.event.inputs.test_environment }}"
+          echo "Environment: $ENVIRONMENT"
+
+          INFO_JSON=$(printf '{"fields":{"project":{"key":"%s"},"summary":"%s","issuetype":{"name":"Test Execution"}},"xrayFields":{"testEnvironments":["%s"],"revision":"WAVE_6"}}' \
+            "$PROJECT" "$SUMMARY" "$ENVIRONMENT")
+
+          echo "Info JSON: $INFO_JSON"
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${{ secrets.JIRA_PROJECT_KEY }}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${{ github.event.inputs.test_environment }}&revision=WAVE_6" \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit/multipart" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
-            -F "file=@results/ToscaCIResults_fixed.xml;type=text/xml")
+            -F "file=@results/ToscaCIResults_fixed.xml;type=text/xml" \
+            -F "info=$INFO_JSON;type=application/json")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
