@@ -22,5 +22,5 @@ for testsuite in root.findall('testsuite'):
         # Remove log attribute (huge, not needed by Xray)
         testcase.attrib.pop('log', None)
 
-tree.write(output_file, encoding='unicode', xml_declaration=True)
+tree.write(output_file, encoding='utf-8', xml_declaration=True)
 print(f"Done: {count} testcases updated with classname='{suite_name}'")

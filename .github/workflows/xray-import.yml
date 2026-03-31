@@ -59,7 +59,7 @@ jobs:
       - name: Import JUnit XML to Xray Cloud
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
-          ENCODED_SUMMARY=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SUMMARY'))")
+          ENCODED_SUMMARY=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$SUMMARY")
 
           echo "Importing file: results/ToscaCIResults_fixed.xml"
           echo "Project: ${{ secrets.JIRA_PROJECT_KEY }}"
