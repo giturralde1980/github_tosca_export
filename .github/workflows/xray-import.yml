@@ -47,28 +47,20 @@ jobs:
 
       - name: Fix XML - add classname attribute
         run: |
-          python3 - <<'EOF'
-          import xml.etree.ElementTree as ET
+          python3 scripts/fix_junit_xml.py \
+            "${{ github.event.inputs.results_file }}" \
+            results/ToscaCIResults_fixed.xml
 
-          tree = ET.parse('${{ github.event.inputs.results_file }}')
-          root = tree.getroot()
-
-          for testsuite in root.findall('testsuite'):
-              suite_name = testsuite.get('name', 'UNKNOWN')
-              for testcase in testsuite.findall('testcase'):
-                  if not testcase.get('classname'):
-                      testcase.set('classname', suite_name)
-
-          tree.write('results/ToscaCIResults_fixed.xml', encoding='utf-8', xml_declaration=True)
-          print("XML fixed - classname attributes added")
-          EOF
+          echo "Fixed XML first 3 lines:"
+          head -3 results/ToscaCIResults_fixed.xml
+          echo "File size: $(wc -c < results/ToscaCIResults_fixed.xml) bytes"
 
       - name: Import JUnit XML to Xray Cloud
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
           ENCODED_SUMMARY=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SUMMARY'))")
 
-          echo "Importing file: ${{ github.event.inputs.results_file }}"
+          echo "Importing file: results/ToscaCIResults_fixed.xml"
           echo "Project: ${{ secrets.JIRA_PROJECT_KEY }}"
           echo "Summary: $SUMMARY"
           echo "Environment: ${{ github.event.inputs.test_environment }}"
