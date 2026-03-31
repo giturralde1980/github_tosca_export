@@ -27,21 +27,49 @@ jobs:
       - name: Authenticate with Xray Cloud
         id: auth
         run: |
-          TOKEN=$(curl -s -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://xray.cloud.getxray.app/api/v2/authenticate" \
             -H "Content-Type: application/json" \
-            -d "{\"client_id\":\"${{ secrets.XRAY_CLIENT_ID }}\",\"client_secret\":\"${{ secrets.XRAY_CLIENT_SECRET }}\"}" \
-            | tr -d '"')
-          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+            -d "{\"client_id\":\"${{ secrets.XRAY_CLIENT_ID }}\",\"client_secret\":\"${{ secrets.XRAY_CLIENT_SECRET }}\"}")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          TOKEN=$(echo "$RESPONSE" | head -n1 | tr -d '"')
+
+          echo "Auth HTTP status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Authentication failed: $RESPONSE"
+            exit 1
+          fi
+
           echo "Authentication successful"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
       - name: Import JUnit XML to Xray Cloud
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
           ENCODED_SUMMARY=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SUMMARY'))")
 
-          curl -X POST \
+          echo "Importing file: ${{ github.event.inputs.results_file }}"
+          echo "Project: ${{ secrets.JIRA_PROJECT_KEY }}"
+          echo "Summary: $SUMMARY"
+          echo "Environment: ${{ github.event.inputs.test_environment }}"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${{ secrets.JIRA_PROJECT_KEY }}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${{ github.event.inputs.test_environment }}&revision=WAVE_6" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
             -H "Content-Type: multipart/form-data" \
-            -F "file=@${{ github.event.inputs.results_file }}"
+            -F "file=@${{ github.event.inputs.results_file }}")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "Xray HTTP status: $HTTP_CODE"
+          echo "Xray response: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Import failed"
+            exit 1
+          fi
+
+          echo "Import successful"
