@@ -67,16 +67,14 @@ jobs:
           echo "Summary: $SUMMARY"
           echo "Environment: $ENVIRONMENT"
 
-          INFO_JSON=$(printf '{"fields":{"project":{"key":"%s"},"summary":"%s","issuetype":{"name":"Test Execution"}},"xrayFields":{"testEnvironments":["%s"],"revision":"WAVE_6"}}' \
-            "$PROJECT" "$SUMMARY" "$ENVIRONMENT")
-
-          echo "Info JSON: $INFO_JSON"
+          ENCODED_SUMMARY=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$SUMMARY")
+          ENCODED_ENV=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$ENVIRONMENT")
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit/multipart" \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${PROJECT}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${ENCODED_ENV}&revision=WAVE_6" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
-            -F "result=@results/ToscaCIResults_fixed.xml;type=text/xml" \
-            -F "info=$INFO_JSON;type=application/json")
+            -H "Content-Type: text/xml" \
+            --data-binary "@results/ToscaCIResults_fixed.xml")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
