@@ -18,7 +18,7 @@ on:
       test_environment:
         description: 'Test environment label (must exist in Xray project, leave empty to skip)'
         required: false
-        default: 'UAT'
+        default: ''
 
 jobs:
   import-to-xray:
@@ -73,10 +73,17 @@ jobs:
           echo "Environment: $ENVIRONMENT"
 
           ENCODED_SUMMARY=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$SUMMARY")
-          ENCODED_ENV=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$ENVIRONMENT")
+
+          URL="https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${PROJECT}&testExecSummary=${ENCODED_SUMMARY}&revision=WAVE_6"
+          if [ -n "$ENVIRONMENT" ]; then
+            ENCODED_ENV=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$ENVIRONMENT")
+            URL="${URL}&testEnvironments=${ENCODED_ENV}"
+          fi
+
+          echo "URL: $URL"
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=${PROJECT}&testExecSummary=${ENCODED_SUMMARY}&testEnvironments=${ENCODED_ENV}&revision=WAVE_6" \
+            "$URL" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
             -H "Content-Type: text/xml" \
             --data-binary "@results/ToscaCIResults_fixed.xml")
