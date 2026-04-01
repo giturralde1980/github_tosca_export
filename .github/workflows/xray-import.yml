@@ -10,15 +10,15 @@ on:
       project_key:
         description: 'Jira project key (e.g. CHCCRM01). Leave empty to use the JIRA_PROJECT_KEY secret.'
         required: false
-        default: ''
+        default: 'CHCCRM01'
       test_exec_summary:
         description: 'Test Execution summary in Jira'
         required: false
-        default: 'WAVE_6 - Opella Italy O2C Regression'
+        default: 'Automation Test Execution'
       test_environment:
-        description: 'Test environment label'
+        description: 'Test environment label (must exist in Xray project, leave empty to skip)'
         required: false
-        default: 'SAP_FIORI_ITALY'
+        default: 'UAT'
 
 jobs:
   import-to-xray:
