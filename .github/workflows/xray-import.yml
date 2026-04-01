@@ -7,6 +7,10 @@ on:
         description: 'Path to ToscaCIResults.xml'
         required: true
         default: 'results/ToscaCIResults.xml'
+      project_key:
+        description: 'Jira project key (e.g. CHCCRM01). Leave empty to use the JIRA_PROJECT_KEY secret.'
+        required: false
+        default: ''
       test_exec_summary:
         description: 'Test Execution summary in Jira'
         required: false
@@ -60,7 +64,8 @@ jobs:
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
           ENVIRONMENT="${{ github.event.inputs.test_environment }}"
-          PROJECT="${{ secrets.JIRA_PROJECT_KEY }}"
+          INPUT_PROJECT="${{ github.event.inputs.project_key }}"
+          PROJECT="${INPUT_PROJECT:-${{ secrets.JIRA_PROJECT_KEY }}}"
 
           echo "Importing file: results/ToscaCIResults_fixed.xml"
           echo "Project: $PROJECT"
