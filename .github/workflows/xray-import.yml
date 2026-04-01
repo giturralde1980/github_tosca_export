@@ -6,7 +6,7 @@ on:
       results_file:
         description: 'Path to ToscaCIResults.xml'
         required: true
-        default: 'results/ToscaCIResults.xml'
+        default: 'results/minimal_test.xml'
       project_key:
         description: 'Jira project key (e.g. CHCCRM01). Leave empty to use the JIRA_PROJECT_KEY secret.'
         required: false
