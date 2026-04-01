@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites>
+  <testsuite name="WAVE_6" tests="1" failures="0" skipped="0" time="223.6903625" timestamp="2026-02-24T10:03:29">
+    <testcase name="CS_02_01_001 Create Sales Order (manual standard)" time="223.6903625" timestamp="2026-02-24T10:03:30.6344361+01:00" classname="WAVE_6" />
+  </testsuite>
+</testsuites>
