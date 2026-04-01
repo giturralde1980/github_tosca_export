@@ -1,6 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
 <testsuites>
   <testsuite name="CHCCRM01" tests="1" failures="0" skipped="0" time="223.6903625" timestamp="2026-02-24T10:03:29">
-    <testcase name="Automated Test01" time="223.6903625" timestamp="2026-02-24T10:03:30.6344361+01:00" classname="CHCCRM01" />
+    <testcase name="Automated Test01" time="223.6903625" timestamp="2026-02-24T10:03:30.6344361+01:00" classname="CHCCRM01">
+      <properties>
+        <property name="testKey" value="CHCCRM01-18751" />
+      </properties>
+    </testcase>
   </testsuite>
 </testsuites>
