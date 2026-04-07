@@ -60,46 +60,6 @@ jobs:
           cat results/ToscaCIResults_fixed.xml
           echo "=== END OF FIXED XML ==="
 
-      # WORKAROUND: Reset Test Run status to TODO before importing.
-      # Xray blocks creating new Test Runs if the test's last run is PASSED/FAILED.
-      # This step fetches the active Test Run for each test and resets it to TODO.
-      # TODO: Remove this step once the Xray Test Workflow in Opella is configured
-      # to allow re-execution (transition PASSED/FAILED -> EXECUTING).
-      # Hardcoded issueIds: 1200140 = Automated Test01 (CHCCRM01)
-      - name: Reset Test Run status to TODO (workaround)
-        run: |
-          TOKEN="${{ steps.auth.outputs.token }}"
-          ISSUE_IDS=("1200140")
-
-          for ISSUE_ID in "${ISSUE_IDS[@]}"; do
-            echo "Fetching Test Run for issueId: $ISSUE_ID"
-
-            RUN_RESPONSE=$(curl -s -X POST \
-              "https://xray.cloud.getxray.app/api/v2/graphql" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"query\":\"{ getTestRuns(testIssueIds: [\\\"$ISSUE_ID\\\"], limit: 1) { results { id status { name } } } }\"}")
-
-            echo "Test Run response: $RUN_RESPONSE"
-
-            RUN_ID=$(echo "$RUN_RESPONSE" | python3 -c "import sys,json; runs=json.load(sys.stdin)['data']['getTestRuns']['results']; print(runs[0]['id'] if runs else '')")
-
-            if [ -z "$RUN_ID" ]; then
-              echo "No existing Test Run found for $ISSUE_ID, skipping reset"
-              continue
-            fi
-
-            echo "Resetting Test Run $RUN_ID to TODO"
-
-            RESET_RESPONSE=$(curl -s -X POST \
-              "https://xray.cloud.getxray.app/api/v2/graphql" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"query\":\"mutation { updateTestRunStatus(id: \\\"$RUN_ID\\\", status: \\\"TODO\\\") }\"}")
-
-            echo "Reset response: $RESET_RESPONSE"
-          done
-
       - name: Import JUnit XML to Xray Cloud
         run: |
           SUMMARY="${{ github.event.inputs.test_exec_summary }}"
